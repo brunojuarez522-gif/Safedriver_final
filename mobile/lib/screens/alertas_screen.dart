@@ -100,115 +100,129 @@ class _AlertasScreenState extends State<AlertasScreen> {
             onRefresh: () async => _refrescar(),
             color: const Color(0xFFE64A19),
             child: FutureBuilder<List<Alerta>>(
-              future: _future,
-              builder: (_, snap) {
-                if (snap.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                      child:
-                          CircularProgressIndicator(color: Color(0xFFE64A19)));
-                }
-                if (snap.hasError) {
-                  return Center(
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+          future: _future,
+          builder: (_, snap) {
+
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: Color(0xFFE64A19)),
+              );
+            }
+
+            if (snap.hasError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.wifi_off, size: 64, color: Colors.grey),
+                    const SizedBox(height: 16),
+                    const Text('Sin conexión', style: TextStyle(color: Colors.grey)),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _refrescar,
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final todasLasAlertas = snap.data ?? [];
+            final lista = _filtro == 'TODOS'
+                ? todasLasAlertas
+                : todasLasAlertas.where((a) => a.nivel == _filtro).toList();
+
+            if (lista.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_outline, size: 64, color: Colors.green[300]),
+                    const SizedBox(height: 16),
+                    const Text('Sin alertas en esta categoría', style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: lista.length,
+              itemBuilder: (_, i) {
+                final a = lista[i];
+                final color = _color(a.nivel);
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border(left: BorderSide(color: color, width: 5)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
                         children: [
-                          const Icon(Icons.wifi_off,
-                              size: 64, color: Colors.grey),
-                          const SizedBox(height: 16),
-                          const Text('Sin conexión',
-                              style: TextStyle(color: Colors.grey)),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                              onPressed: _refrescar,
-                              child: const Text('Reintentar')),
-                        ]),
-                  );
-                }
-                if (lista.isEmpty) {
-                  return Center(
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                          Icon(Icons.check_circle_outline,
-                              size: 64, color: Colors.green[300]),
-                          const SizedBox(height: 16),
-                          const Text('Sin alertas en esta categoría',
-                              style: TextStyle(color: Colors.grey)),
-                        ]),
-                  );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: lista.length,
-                  itemBuilder: (_, i) {
-                    final a = lista[i];
-                    final color = _color(a.nivel);
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border:
-                              Border(left: BorderSide(color: color, width: 5)),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                  color: color.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(10)),
-                              child:
-                                  Icon(_icon(a.tipo), color: color, size: 22),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                    Row(children: [
-                                      Text(a.tipo,
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: color)),
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: color.withOpacity(0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(6),
-                                          border: Border.all(color: color),
-                                        ),
-                                        child: Text(a.nivel,
-                                            style: TextStyle(
-                                                color: color,
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold)),
-                                      ),
-                                    ]),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Conductor #${a.conductorId}  ·  ${_formatMetrics(a)}',
-                                      style: const TextStyle(
-                                          color: Colors.grey, fontSize: 12),
-                                    ),
-                                    if (a.timestamp.length > 10)
-                                      Text(
-                                        a.timestamp.substring(0, 19),
-                                        style: const TextStyle(
-                                            color: Colors.grey, fontSize: 11),
-                                      ),
-                                  ]),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                          ]),
+                            child: Icon(_icon(a.tipo), color: color, size: 22),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      a.tipo,
+                                      style: TextStyle(fontWeight: FontWeight.bold, color: color),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: color.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(color: color),
+                                      ),
+                                      child: Text(
+                                        a.nivel,
+                                        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Conductor #${a.conductorId} - ${_formatMetrics(a)}',
+                                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                ),
+                                if (a.timestamp.length > 10)
+                                  Text(
+                                    a.timestamp.substring(0, 19),
+                                    style: const TextStyle(color: Colors.grey, fontSize: 11),
+                                  ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ),
-      ]),
-    );
-  }
-}
+                  );
+                 },
+                ); 
+                },
+              ), 
+            ), 
+          ), 
+        ], 
+      ), 
+    ); 
+  } 
+} 
