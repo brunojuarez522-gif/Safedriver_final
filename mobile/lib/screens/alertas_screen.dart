@@ -18,7 +18,6 @@ class _AlertasScreenState extends State<AlertasScreen> {
     _refrescar();
   }
 
-  // ✅ SOLUCIONADO: setState ya no retorna un Future asíncrono
   void _refrescar() {
     setState(() {
       _future = ApiService().fetchAlertas();
@@ -37,6 +36,15 @@ class _AlertasScreenState extends State<AlertasScreen> {
           ? Icons.speed
           : Icons.check_circle;
 
+  String _formatMetrics(Alerta a) {
+    List<String> parts = [];
+    if (a.valorBpm != null) parts.add('BPM: ${a.valorBpm}');
+    if (a.valorVelocidad != null) parts.add('${a.valorVelocidad} km/h');
+    return parts.isNotEmpty
+        ? parts.join('  ·  ')
+        : 'Datos de telemetría no disponibles';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,7 +60,6 @@ class _AlertasScreenState extends State<AlertasScreen> {
         ],
       ),
       body: Column(children: [
-        // Filtros horizontales
         Container(
           color: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -88,7 +95,6 @@ class _AlertasScreenState extends State<AlertasScreen> {
             ),
           ),
         ),
-        // Lista de alertas mapeadas desde la API
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async => _refrescar(),
@@ -118,16 +124,10 @@ class _AlertasScreenState extends State<AlertasScreen> {
                         ]),
                   );
                 }
-
-                final lista = (snap.data ?? [])
-                    .where((a) => _filtro == 'TODOS' || a.nivel == _filtro)
-                    .toList();
-
                 if (lista.isEmpty) {
                   return Center(
                     child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
                           Icon(Icons.check_circle_outline,
                               size: 64, color: Colors.green[300]),
                           const SizedBox(height: 16),
@@ -160,12 +160,8 @@ class _AlertasScreenState extends State<AlertasScreen> {
                                   borderRadius: BorderRadius.circular(10)),
                               child:
                                   Icon(_icon(a.tipo), color: color, size: 22),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
                                     Row(children: [
                                       Text(a.tipo,
                                           style: TextStyle(
@@ -190,7 +186,7 @@ class _AlertasScreenState extends State<AlertasScreen> {
                                     ]),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Conductor #${a.conductorId}  ·  BPM: ${a.valorBpm ?? "N/A"}  ·  ${a.valorVelocidad != null ? "${a.valorVelocidad} km/h" : ""}',
+                                      'Conductor #${a.conductorId}  ·  ${_formatMetrics(a)}',
                                       style: const TextStyle(
                                           color: Colors.grey, fontSize: 12),
                                     ),

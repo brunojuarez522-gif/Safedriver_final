@@ -1,58 +1,67 @@
 from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
+from typing import List, Optional
 
+# --- ESQUEMAS DE AUTENTICACIÓN ---
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
-# ── Conductor ──────────────────────────────────────────────
-class ConductorCreate(BaseModel):
-    nombre: str
-    licencia: str
+class TokenData(BaseModel):
+    username: Optional[str] = None
 
-class ConductorOut(BaseModel):
-    id: int
-    nombre: str
-    licencia: str
-
-    class Config:
-        from_attributes = True
-
-
-# ── Vehículo ───────────────────────────────────────────────
-class VehiculoCreate(BaseModel):
-    placa: str
-    modelo: str
-    conductor_id: int
-
-class VehiculoOut(BaseModel):
-    id: int
-    placa: str
-    modelo: str
-    conductor_id: int
-
-    class Config:
-        from_attributes = True
-
-
-# ── Alerta ─────────────────────────────────────────────────
-class AlertaCreate(BaseModel):
-    tipo: str
+# --- ESQUEMAS DE ALERTA ---
+class AlertaBase(BaseModel):
     nivel: str
-    valor_bpm: Optional[float] = None
-    valor_velocidad: Optional[float] = None
-    parpadeos_por_minuto: Optional[float] = None
+    tipo: str
+    valor_velocidad: float
+    valor_bpm: float
+    parpadeos_por_minuto: float
     conductor_id: int
     vehiculo_id: int
 
-class AlertaOut(BaseModel):
+class AlertaCreate(AlertaBase):
+    pass
+
+class AlertaOut(AlertaBase):
     id: int
-    tipo: str
-    nivel: str
-    valor_bpm: Optional[float]
-    valor_velocidad: Optional[float]
-    parpadeos_por_minuto: Optional[float]
     timestamp: datetime
-    conductor_id: int
-    vehiculo_id: int
 
     class Config:
         from_attributes = True
+
+# --- ESQUEMAS DE VEHÍCULO ---
+class VehiculoBase(BaseModel):
+    placa: str
+    modelo: str
+    conductor_id: int
+
+class VehiculoCreate(VehiculoBase):
+    pass
+
+class VehiculoOut(VehiculoBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+# --- ESQUEMAS DE CONDUCTOR ---
+class ConductorBase(BaseModel):
+    nombre: str
+    licencia: str
+
+class ConductorCreate(ConductorBase):
+    pass
+
+class ConductorOut(ConductorBase):
+    id: int
+    vehiculos: List[VehiculoOut] = []
+
+    class Config:
+        from_attributes = True
+
+# Alias de seguridad por si alguna otra parte de tu código (como crud.py) 
+# llama a las clases sin el sufijo "Out"
+Alerta = AlertaOut
+Vehiculo = VehiculoOut
+Conductor = ConductorOut
