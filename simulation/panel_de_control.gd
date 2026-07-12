@@ -47,8 +47,9 @@ func construir_panel_flota() -> void:
 	fondo_panel.add_child(hbox)
 
 	# 3. Cargar el icono por defecto de Godot
-	var textura_por_defecto = preload("res://icon.svg")
-
+	var textura_por_defecto = load("res://pngwing.com (8).png")
+	#textura_por_defecto.scale = Vector2(0.15, 0.15)
+	
 	# 4. Crear los 3 Conductores
 	for id in range(1, 4):
 		var vbox = VBoxContainer.new()
@@ -78,7 +79,7 @@ func construir_panel_flota() -> void:
 		# Crear el Vehículo
 		var sprite = Sprite2D.new()
 		sprite.texture = textura_por_defecto
-		sprite.scale = Vector2(0.5, 0.5) # Ligeramente más pequeños para mejor proporción
+		sprite.scale = Vector2(0.2, 0.2) # Ligeramente más pequeños para mejor proporción
 		sprite.position = Vector2(randf_range(-200, 500), carril_y)
 		add_child(sprite)
 
@@ -118,6 +119,9 @@ func _process(delta: float) -> void:
 
 		if datos["estado"] == "CRITICO" or datos["estado"] == "ALERTA":
 			requiere_alarma = true
+			sprite.offset = Vector2(randf_range(-10, 10), randf_range(-4, 4))
+		else:
+			sprite.offset = Vector2(0, 0)
 
 	if requiere_alarma and not alarma_sonora.playing:
 		alarma_sonora.play()
@@ -141,6 +145,7 @@ func _al_recibir_login(result: int, response_code: int, headers: PackedStringArr
 func _consultar_alertas() -> void:
 	if token_jwt == "": return
 	var headers = PackedStringArray(["Authorization: Bearer " + token_jwt])
+	http_alertas.cancel_request()
 	http_alertas.request(url_alertas, headers, HTTPClient.METHOD_GET)
 
 func _al_recibir_alertas(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:

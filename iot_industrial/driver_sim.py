@@ -58,8 +58,17 @@ def inicializar_flota(token: str):
     print("✅ Base de datos lista.\n")
 
 def leer_sensores_cabina() -> dict:
-    # Simulando datos más realistas basados en los nuevos requerimientos biométricos
-    estado_aleatorio = random.choice(["NORMAL", "FATIGA_TEMPRANA", "MICROSUEÑO", "ESTRES"])
+
+    probabilidad = random.randint(1, 100)
+
+    if probabilidad <= 80:
+        estado_aleatorio = "NORMAL"          # 80% del tiempo
+    elif probabilidad <= 90:
+        estado_aleatorio = "FATIGA_TEMPRANA" # 10% del tiempo
+    elif probabilidad <= 95:
+        estado_aleatorio = "MICROSUEÑO"      # 5% del tiempo
+    else:
+        estado_aleatorio = "ESTRES"          # 5% del tiempo
     
     if estado_aleatorio == "NORMAL":
         frecuencia_parpadeo = round(random.uniform(12.0, 20.0), 1)
@@ -133,8 +142,7 @@ def iniciar_simulacion():
         icono = {"NORMAL": "🟢", "ALERTA": "🟡", "CRITICO": "🔴"}[nivel]
         print(f"[Ciclo {ciclo:04d} | Chofer {id_actual}] {icono} {nivel:7s} | BPM={sensores['valor_bpm']} | Parpadeos={sensores['frecuencia_parpadeo']} | Vel={sensores['velocidad_kmh']:5.1f}")
 
-        if nivel != "NORMAL":
-            enviar_alerta(token, sensores, nivel, tipo, id_actual)
+        enviar_alerta(token, sensores, nivel, tipo, id_actual)
 
         time.sleep(INTERVALO_CRITICO if nivel == "CRITICO" else INTERVALO_NORMAL)
 

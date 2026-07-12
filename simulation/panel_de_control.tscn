@@ -1,18 +1,18 @@
-[gd_scene load_steps=3 format=3 uid="uid://fnbnfgw7ucel"]
+[gd_scene format=3 uid="uid://fnbnfgw7ucel"]
 
 [ext_resource type="Script" uid="uid://dxqws0v1evlrt" path="res://panel_de_control.gd" id="1_bqpqh"]
 [ext_resource type="AudioStream" uid="uid://48lnt7nqd8f" path="res://Alarm_or_siren.ogg" id="2_d5c4k"]
 
-[node name="PanelDeControl" type="Node2D"]
+[node name="PanelDeControl" type="Node2D" unique_id=1034409769]
 script = ExtResource("1_bqpqh")
 
-[node name="ClienteHTTP" type="HTTPRequest" parent="."]
+[node name="ClienteHTTP" type="HTTPRequest" parent="." unique_id=1053126410]
 
-[node name="HTTPAlertas" type="HTTPRequest" parent="."]
+[node name="HTTPAlertas" type="HTTPRequest" parent="." unique_id=535884631]
 
-[node name="TimerAlertas" type="Timer" parent="."]
+[node name="TimerAlertas" type="Timer" parent="." unique_id=1505467561]
 
-[node name="AudioAlarma" type="AudioStreamPlayer" parent="."]
+[node name="AudioAlarma" type="AudioStreamPlayer" parent="." unique_id=849153448]
 stream = ExtResource("2_d5c4k")
 
-[node name="Mapa" type="Node2D" parent="."]
+[node name="Mapa" type="Node2D" parent="." unique_id=482520442]
