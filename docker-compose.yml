@@ -1,0 +1,82 @@
+version: '3.8'
+services:
+  # Servicio 1: El Servidor API
+  backend:
+    build: ./backend
+    image: safedriver-backend:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - smat_sqlite_data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:////app/data/safedriver.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  # Servicio 2: Siembra de datos de prueba (corre UNA vez y termina)
+  seed:
+    build: ./iot_industrial
+    image: safedriver-iot:latest
+    command: python seed.py
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      - API_URL_LOGIN=http://backend:8000/token
+      - API_URL_CONDUCTORES=http://backend:8000/conductores/
+      - API_URL_VEHICULOS=http://backend:8000/vehiculos/
+      - USUARIO=admin
+      - CONTRASENA=safedriver123
+    restart: "no"
+
+  # Servicio 3: El traductor de protocolos IoT (MQTT -> HTTP)
+  mqtt_bridge:
+    build: ./iot_industrial
+    image: safedriver-iot:latest
+    command: python mqtt_bridge.py
+    depends_on:
+      backend:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+    environment:
+      - API_URL_LOGIN=http://backend:8000/token
+      - API_URL_ALERTA=http://backend:8000/alertas/
+      - USUARIO=admin
+      - CONTRASENA=safedriver123
+      - MQTT_BROKER=broker.hivemq.com
+      - MQTT_TOPIC=safedriver/telemetria/vehiculos/+
+    restart: on-failure
+
+  # Servicio 4: El sensor simulado (Camión en ruta)
+  mqtt_sender:
+    build: ./iot_industrial
+    image: safedriver-iot:latest
+    command: python mqtt_sender.py
+    depends_on:
+      backend:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+    environment:
+      - API_URL_PARES=http://backend:8000/iot/conductores-activos
+      - MQTT_BROKER=broker.hivemq.com
+      - INTERVALO_REFRESCO_PARES=30
+    restart: on-failure
+
+  # Servicio 5: App móvil (compilada a web, servida con Nginx)
+  mobile_web:
+    build: ./mobile
+    image: safedriver-mobile:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  # Define el volumen para que la DB sobreviva a reinicios
+  smat_sqlite_data:
